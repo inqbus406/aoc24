@@ -30,7 +30,6 @@ fn main() -> std::io::Result<()> {
     Ok(())
 }
 
-
 struct Map {
     map: Vec<Vec<u32>>,
     trailheads: Vec<Point>,
@@ -55,7 +54,10 @@ impl Map {
             for (x, c) in line.chars().enumerate() {
                 let num = c.to_digit(10).unwrap();
                 if num == 0 {
-                    trailheads.push(Point{x: x as i32, y: y as i32});
+                    trailheads.push(Point {
+                        x: x as i32,
+                        y: y as i32,
+                    });
                 }
             }
             map.push(line.chars().map(|c| c.to_digit(10).unwrap()).collect());
@@ -65,7 +67,10 @@ impl Map {
     }
 
     fn part1(&self) -> usize {
-        self.trailheads.iter().map(|p| self.explore(p).iter().count()).sum()
+        self.trailheads
+            .iter()
+            .map(|p| self.explore(p).iter().count())
+            .sum()
     }
 
     fn part2(&self) -> usize {
@@ -103,7 +108,8 @@ impl Map {
             return result;
         }
 
-        self.get_neighbors(start).into_iter()
+        self.get_neighbors(start)
+            .into_iter()
             .filter(|p| self.passable(start, p))
             .flat_map(|p| self.explore(&p))
             .collect::<HashSet<_>>()
@@ -117,19 +123,35 @@ impl Map {
         if self.lookup(start) == 9 {
             return 1;
         }
-        self.get_neighbors(start).into_iter()
+        self.get_neighbors(start)
+            .into_iter()
             .filter(|p| self.passable(start, p))
             .map(|p| self.explore_part2(&p))
             .sum()
     }
 
     fn get_neighbors(&self, start: &Point) -> Vec<Point> {
-        vec![Point{x: start.x + 1, y: start.y},
-             Point{x: start.x - 1, y: start.y},
-             Point{x: start.x, y: start.y - 1},
-             Point{x: start.x, y: start.y + 1}]
-            .into_iter().filter(|p| self.in_bounds(p))
-            .collect()
+        vec![
+            Point {
+                x: start.x + 1,
+                y: start.y,
+            },
+            Point {
+                x: start.x - 1,
+                y: start.y,
+            },
+            Point {
+                x: start.x,
+                y: start.y - 1,
+            },
+            Point {
+                x: start.x,
+                y: start.y + 1,
+            },
+        ]
+        .into_iter()
+        .filter(|p| self.in_bounds(p))
+        .collect()
     }
 }
 
@@ -153,4 +175,3 @@ mod tests {
         Ok(())
     }
 }
-

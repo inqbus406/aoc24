@@ -70,8 +70,13 @@ impl Stones {
         }
         let num_string = num.to_string();
         if num_string.len() % 2 == 0 {
-            result.insert(num_string[0..num_string.len() / 2].parse::<u64>().unwrap(), 1);
-            *result.entry(num_string[num_string.len() / 2..].parse::<u64>().unwrap()).or_insert(0) += 1;
+            result.insert(
+                num_string[0..num_string.len() / 2].parse::<u64>().unwrap(),
+                1,
+            );
+            *result
+                .entry(num_string[num_string.len() / 2..].parse::<u64>().unwrap())
+                .or_insert(0) += 1;
             return result;
         }
         result.insert(num * 2024, 1);

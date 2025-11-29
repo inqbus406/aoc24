@@ -22,14 +22,17 @@ fn main() -> std::io::Result<()> {
             result.push_str(&keypad_robot.enter_digit(&NumericKey::from_char(c)));
             // result.push_str(&format!("   making {}: {}      ", c, keypad_robot.enter_digit(&NumericKey::from_char(c))));
         }
-        let num = code.split('A').take(1).map(|s| s.parse::<usize>().unwrap()).collect::<Vec<_>>();
+        let num = code
+            .split('A')
+            .take(1)
+            .map(|s| s.parse::<usize>().unwrap())
+            .collect::<Vec<_>>();
         part1_sum += num[0] * result.len();
         println!("{}: {}, len: {}", code, result, result.len());
         println!("As: {}", result.chars().filter(|&c| c == 'A').count());
     }
 
     println!("Part1: {part1_sum}");
-
 
     Ok(())
 }
@@ -63,7 +66,7 @@ impl NumericKey {
             '7' => NumericKey::Seven,
             '8' => NumericKey::Eight,
             '9' => NumericKey::Nine,
-            _   => unreachable!(),
+            _ => unreachable!(),
         }
     }
 
@@ -111,7 +114,6 @@ impl NumericKey {
             _ => None,
         }
     }
-
 }
 
 #[derive(Debug, Clone)]
@@ -143,13 +145,12 @@ impl TClusterKey {
             TClusterKey::Up => '^',
         }
     }
-
 }
 
 #[derive(Debug, Clone)]
 struct Next {
     pos: NumericKey,
-    path: Vec<TClusterKey>
+    path: Vec<TClusterKey>,
 }
 
 struct NumericKeypadRobot {
@@ -201,7 +202,10 @@ impl NumericKeypadRobot {
         let mut result = Vec::new();
 
         let mut fringe = VecDeque::new();
-        fringe.push_back(Next { pos: self.position.clone(), path: Vec::new() });
+        fringe.push_back(Next {
+            pos: self.position.clone(),
+            path: Vec::new(),
+        });
 
         while let Some(current) = fringe.pop_front() {
             // dbg!(&current);
@@ -215,7 +219,10 @@ impl NumericKeypadRobot {
                 // dbg!(&next);
                 let mut path = current.path.clone();
                 path.push(next.clone());
-                fringe.push_back(Next { pos: current.pos.next(&next).unwrap(), path });
+                fringe.push_back(Next {
+                    pos: current.pos.next(&next).unwrap(),
+                    path,
+                });
             }
         }
         // println!("Found valid paths from {:?} to {:?}", self.position, digit);
@@ -225,15 +232,22 @@ impl NumericKeypadRobot {
     }
 
     fn get_moves_toward(start: &NumericKey, end: &NumericKey) -> Vec<TClusterKey> {
-        let result = [TClusterKey::Up, TClusterKey::Down, TClusterKey::Left, TClusterKey::Right].into_iter()
-            .filter(|pos| start.next(&pos).is_some())
-            .filter(|pos| start.next(&pos).unwrap().position() != (0, 3))  // Don't step in the gap
-            .filter(|pos| {
-                let test = Self::manhattan_distance(&start.next(&pos).unwrap(), end) < Self::manhattan_distance(start, end);
-                // println!("{:?} valid move from {:?} toward {:?}? {test}", &start.next(&pos).unwrap(), start, end);
-                test
-            })
-            .collect();
+        let result = [
+            TClusterKey::Up,
+            TClusterKey::Down,
+            TClusterKey::Left,
+            TClusterKey::Right,
+        ]
+        .into_iter()
+        .filter(|pos| start.next(&pos).is_some())
+        .filter(|pos| start.next(&pos).unwrap().position() != (0, 3)) // Don't step in the gap
+        .filter(|pos| {
+            let test = Self::manhattan_distance(&start.next(&pos).unwrap(), end)
+                < Self::manhattan_distance(start, end);
+            // println!("{:?} valid move from {:?} toward {:?}? {test}", &start.next(&pos).unwrap(), start, end);
+            test
+        })
+        .collect();
 
         // println!("Going from {:?} to {:?}", start, end);
         // dbg!(&result);
@@ -241,9 +255,9 @@ impl NumericKeypadRobot {
     }
 
     fn manhattan_distance(start: &NumericKey, end: &NumericKey) -> usize {
-        start.position().0.abs_diff(end.position().0) + start.position().1.abs_diff(end.position().1)
+        start.position().0.abs_diff(end.position().0)
+            + start.position().1.abs_diff(end.position().1)
     }
-
 }
 
 fn enter_direction(start: &TClusterKey, end: &TClusterKey, n_robots: usize) -> String {
@@ -417,9 +431,17 @@ mod tests {
 
     #[test]
     fn test_manhattan_distance() {
-        assert_eq!(NumericKeypadRobot::manhattan_distance(&NumericKey::A, &NumericKey::Zero), 1);
-        assert_eq!(NumericKeypadRobot::manhattan_distance(&NumericKey::A, &NumericKey::One), 3);
-        assert_eq!(NumericKeypadRobot::manhattan_distance(&NumericKey::A, &NumericKey::Seven), 5);
+        assert_eq!(
+            NumericKeypadRobot::manhattan_distance(&NumericKey::A, &NumericKey::Zero),
+            1
+        );
+        assert_eq!(
+            NumericKeypadRobot::manhattan_distance(&NumericKey::A, &NumericKey::One),
+            3
+        );
+        assert_eq!(
+            NumericKeypadRobot::manhattan_distance(&NumericKey::A, &NumericKey::Seven),
+            5
+        );
     }
 }
-

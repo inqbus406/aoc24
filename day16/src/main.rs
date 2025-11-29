@@ -25,9 +25,7 @@ impl Eq for Next {}
 
 impl PartialEq<Self> for Next {
     fn eq(&self, other: &Self) -> bool {
-        self.cost == other.cost
-            && self.loc == other.loc
-            && self.tiles == other.tiles
+        self.cost == other.cost && self.loc == other.loc && self.tiles == other.tiles
     }
 }
 
@@ -101,7 +99,7 @@ struct Maze {
     width: usize,
     height: usize,
     walls: HashSet<Position>,
-    visited: HashMap<Position, usize>,  // store minimum cost to get there with visited tiles
+    visited: HashMap<Position, usize>, // store minimum cost to get there with visited tiles
     end: Position,
     tiles: HashMap<Position, usize>,
 }
@@ -116,7 +114,11 @@ impl Maze {
         let mut height = 0;
         let mut walls = HashSet::new();
         let mut visited = HashMap::new();
-        let mut end = Position { x: 0, y: 0, dir: Direction::None };
+        let mut end = Position {
+            x: 0,
+            y: 0,
+            dir: Direction::None,
+        };
 
         for (y, line) in lines.enumerate() {
             let Ok(line) = line else {
@@ -127,12 +129,25 @@ impl Maze {
             }
             width = line.len();
             for (x, c) in line.chars().enumerate() {
-                let p = Position { x: x as i32, y: y as i32, dir: Direction::None };
+                let p = Position {
+                    x: x as i32,
+                    y: y as i32,
+                    dir: Direction::None,
+                };
                 match c {
                     '#' => _ = walls.insert(p),
                     'E' => end = p,
-                    'S' => _ = visited.insert(Position{x: p.x, y: p.y, dir: Direction::East}, 0),
-                    _   => {}
+                    'S' => {
+                        _ = visited.insert(
+                            Position {
+                                x: p.x,
+                                y: p.y,
+                                dir: Direction::East,
+                            },
+                            0,
+                        )
+                    }
+                    _ => {}
                 }
             }
             height = max(height, y + 1);
@@ -152,7 +167,7 @@ impl Maze {
         let mut current = Next {
             loc: self.visited.keys().nth(0).unwrap().clone(),
             cost: 0,
-            tiles: HashMap::new()
+            tiles: HashMap::new(),
         };
         current.tiles.insert(current.loc, 0);
 
@@ -175,8 +190,12 @@ impl Maze {
 
             for (neighbor, cost) in self.next_options(&current.loc) {
                 if self.visited.contains_key(&neighbor) {
-                    if *self.visited.get(&neighbor).unwrap() as i32 >= (current.cost + cost) as i32 - 1000 {
-                        self.visited.entry(neighbor).and_modify(|v| *v = current.cost + cost);
+                    if *self.visited.get(&neighbor).unwrap() as i32
+                        >= (current.cost + cost) as i32 - 1000
+                    {
+                        self.visited
+                            .entry(neighbor)
+                            .and_modify(|v| *v = current.cost + cost);
                     } else {
                         continue;
                     }
@@ -194,24 +213,41 @@ impl Maze {
         }
 
         (shortest, self.tiles.len())
-
     }
 
     fn next_options(&self, pos: &Position) -> Vec<(Position, usize)> {
         let mut options = Vec::new();
         let current = pos.clone();
-        let neighbors = [Position { x: current.x + 1, y: current.y, dir: Direction::East },
-                                    Position { x: current.x - 1, y: current.y, dir: Direction::West },
-                                    Position { x: current.x, y: current.y - 1, dir: Direction::North },
-                                    Position { x: current.x, y: current.y + 1, dir: Direction::South }]
-            .into_iter().filter(|p| !self.is_wall(p))
-            // .filter(|p| !self.visited.contains(p))  // Originally used this for part1, but needed all passable neighbors for part2
-            .collect::<Vec<Position>>();
+        let neighbors = [
+            Position {
+                x: current.x + 1,
+                y: current.y,
+                dir: Direction::East,
+            },
+            Position {
+                x: current.x - 1,
+                y: current.y,
+                dir: Direction::West,
+            },
+            Position {
+                x: current.x,
+                y: current.y - 1,
+                dir: Direction::North,
+            },
+            Position {
+                x: current.x,
+                y: current.y + 1,
+                dir: Direction::South,
+            },
+        ]
+        .into_iter()
+        .filter(|p| !self.is_wall(p))
+        // .filter(|p| !self.visited.contains(p))  // Originally used this for part1, but needed all passable neighbors for part2
+        .collect::<Vec<Position>>();
 
         for neighbor in neighbors {
             options.push((neighbor, 1 + current.dir.turns_to(&neighbor.dir) * 1000));
         }
-
 
         options
     }
@@ -224,7 +260,11 @@ impl Maze {
     fn display(&self) {
         for y in 0..self.height {
             for x in 0..self.width {
-                let p = Position { x: x as i32, y: y as i32, dir: Direction::None };
+                let p = Position {
+                    x: x as i32,
+                    y: y as i32,
+                    dir: Direction::None,
+                };
                 if self.is_wall(&p) {
                     print!("#");
                     continue;

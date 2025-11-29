@@ -1,8 +1,8 @@
+use itertools::Itertools;
 use std::cmp::max;
 use std::collections::{HashMap, HashSet};
 use std::fs::File;
 use std::io::{BufRead, BufReader};
-use itertools::Itertools;
 
 #[derive(Eq, Hash, PartialEq, Debug)]
 struct Position(i32, i32);
@@ -21,7 +21,6 @@ fn main() -> std::io::Result<()> {
 
     Ok(())
 }
-
 
 // Count antinodes for each frequency
 fn part1(map: &Map) -> usize {
@@ -57,7 +56,10 @@ fn part2(map: &Map) -> usize {
 
 fn find_antinodes(p0: &Position, p1: &Position) -> (Position, Position) {
     let diff = (p1.0 - p0.0, p1.1 - p0.1);
-    (Position(p0.0 - diff.0, p0.1 - diff.1), Position(p1.0 + diff.0, p1.1 + diff.1))
+    (
+        Position(p0.0 - diff.0, p0.1 - diff.1),
+        Position(p1.0 + diff.0, p1.1 + diff.1),
+    )
 }
 
 fn find_harmonic_antinodes(p0: &Position, p1: &Position, map: &Map) -> Vec<Position> {
@@ -86,7 +88,6 @@ fn find_harmonic_antinodes(p0: &Position, p1: &Position, map: &Map) -> Vec<Posit
     result
 }
 
-
 struct Map {
     x_size: usize,
     y_size: usize,
@@ -114,9 +115,11 @@ impl Map {
 
             for (x, c) in line.chars().enumerate() {
                 match c {
-                    'a'..='z' | 'A'..='Z' |  '0'..='9' => map.entry(c).or_insert(Vec::new())
+                    'a'..='z' | 'A'..='Z' | '0'..='9' => map
+                        .entry(c)
+                        .or_insert(Vec::new())
                         .push(Position(x.try_into().unwrap(), y.try_into().unwrap())),
-                    _ => {},
+                    _ => {}
                 }
                 x_max = max(x_max, x);
             }
@@ -128,7 +131,6 @@ impl Map {
             x_size: x_max,
             antennas: map,
         })
-
     }
 
     fn in_map(&self, p: &Position) -> bool {
@@ -148,11 +150,26 @@ mod tests {
 
     #[test]
     fn test_find_antinodes() {
-        assert_eq!(find_antinodes(&Position(4, 3), &Position(5, 5)), (Position(3, 1), Position(6, 7)));
-        assert_eq!(find_antinodes(&Position(4, 3), &Position(8, 4)), (Position(0, 2), Position(12, 5)));
-        assert_eq!(find_antinodes(&Position(8, 4), &Position(5, 5)), (Position(11, 3), Position(2, 6)));
-        assert_eq!(find_antinodes(&Position(6, 5), &Position(8, 8)), (Position(4, 2), Position(10, 11)));
-        assert_eq!(find_antinodes(&Position(8, 8), &Position(6, 5)), (Position(10, 11), Position(4, 2)));
+        assert_eq!(
+            find_antinodes(&Position(4, 3), &Position(5, 5)),
+            (Position(3, 1), Position(6, 7))
+        );
+        assert_eq!(
+            find_antinodes(&Position(4, 3), &Position(8, 4)),
+            (Position(0, 2), Position(12, 5))
+        );
+        assert_eq!(
+            find_antinodes(&Position(8, 4), &Position(5, 5)),
+            (Position(11, 3), Position(2, 6))
+        );
+        assert_eq!(
+            find_antinodes(&Position(6, 5), &Position(8, 8)),
+            (Position(4, 2), Position(10, 11))
+        );
+        assert_eq!(
+            find_antinodes(&Position(8, 8), &Position(6, 5)),
+            (Position(10, 11), Position(4, 2))
+        );
     }
 
     #[test]

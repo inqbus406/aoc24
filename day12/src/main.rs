@@ -1,8 +1,8 @@
+use itertools::Itertools;
 use std::collections::{HashMap, HashSet, VecDeque};
 use std::fs::File;
 use std::io::{BufRead, BufReader};
 use std::path::Path;
-use itertools::Itertools;
 
 type Crops = HashMap<char, Vec<HashSet<Point>>>;
 
@@ -11,7 +11,7 @@ fn main() -> std::io::Result<()> {
 
     let mut crops = Crops::new();
     let mut explored = HashSet::new();
-    let mut current_point = Point{x: 0, y: 0};
+    let mut current_point = Point { x: 0, y: 0 };
     let mut fringe = VecDeque::new();
 
     while explored.len() < map.size() {
@@ -88,7 +88,10 @@ fn part2(crops: &Crops, map: &Map) -> usize {
     for regions in crops.values() {
         for region in regions {
             let area = area(region);
-            let corners = region.iter().map(|p| corners(p, region, &map)).sum::<usize>();
+            let corners = region
+                .iter()
+                .map(|p| corners(p, region, &map))
+                .sum::<usize>();
             let product = area * corners;
             result += product;
         }
@@ -104,51 +107,81 @@ fn corners(p: &Point, region: &HashSet<Point>, map: &Map) -> usize {
     let all_neighbors = map.get_neighbors_nodiag(p);
     let all_neighbors_diag = map.get_neighbors_diag(p);
 
-    let neighbors = all_neighbors.iter()
-        .filter(|neighbor| region.contains(neighbor)).collect_vec();
-    let neighbors_diag = all_neighbors_diag.iter()
-        .filter(|neighbor| region.contains(neighbor)).collect_vec();
+    let neighbors = all_neighbors
+        .iter()
+        .filter(|neighbor| region.contains(neighbor))
+        .collect_vec();
+    let neighbors_diag = all_neighbors_diag
+        .iter()
+        .filter(|neighbor| region.contains(neighbor))
+        .collect_vec();
 
     let result = match neighbors.len() {
         0 => 4,
         1 => 2,
         2 => {
-            if neighbors.iter().all(|neighbor| neighbor.x == p.x) || neighbors.iter().all(|neighbor| neighbor.y == p.y) {
+            if neighbors.iter().all(|neighbor| neighbor.x == p.x)
+                || neighbors.iter().all(|neighbor| neighbor.y == p.y)
+            {
                 // middle of a straight piece, no corners
                 0
             } else {
                 // center of an L
-                if region.contains(&Point{x: neighbors[0].x, y: neighbors[1].y})
-                    && region.contains(&Point{x: neighbors[1].x, y: neighbors[0].y}) {
+                if region.contains(&Point {
+                    x: neighbors[0].x,
+                    y: neighbors[1].y,
+                }) && region.contains(&Point {
+                    x: neighbors[1].x,
+                    y: neighbors[0].y,
+                }) {
                     1
                 } else {
                     2
                 }
             }
-        },
-        3 => { // T with or without diagonal neighbors
+        }
+        3 => {
+            // T with or without diagonal neighbors
             let mut result = 2usize;
-            let same_x = neighbors.iter().filter(|neighbor| neighbor.x == p.x).collect_vec();
-            let same_y = neighbors.iter().filter(|neighbor| neighbor.y == p.y).collect_vec();
+            let same_x = neighbors
+                .iter()
+                .filter(|neighbor| neighbor.x == p.x)
+                .collect_vec();
+            let same_y = neighbors
+                .iter()
+                .filter(|neighbor| neighbor.y == p.y)
+                .collect_vec();
             if same_x.len() == 2 {
                 // sideways T or reverse
-                if neighbors_diag.contains(&&Point{x: same_y[0].x, y: same_x[0].y}) {
+                if neighbors_diag.contains(&&Point {
+                    x: same_y[0].x,
+                    y: same_x[0].y,
+                }) {
                     result -= 1;
                 }
-                if neighbors_diag.contains(&&Point{x: same_y[0].x, y: same_x[1].y}) {
+                if neighbors_diag.contains(&&Point {
+                    x: same_y[0].x,
+                    y: same_x[1].y,
+                }) {
                     result -= 1;
                 }
             } else {
                 // proper T or upside down
-                if neighbors_diag.contains(&&Point{x: same_y[0].x, y: same_x[0].y}) {
+                if neighbors_diag.contains(&&Point {
+                    x: same_y[0].x,
+                    y: same_x[0].y,
+                }) {
                     result -= 1;
                 }
-                if neighbors_diag.contains(&&Point{x: same_y[1].x, y: same_x[0].y}) {
+                if neighbors_diag.contains(&&Point {
+                    x: same_y[1].x,
+                    y: same_x[0].y,
+                }) {
                     result -= 1;
                 }
             }
             result
-        },
+        }
         4 => 4 - neighbors_diag.len(),
         _ => unreachable!(),
     };
@@ -160,7 +193,7 @@ fn corners(p: &Point, region: &HashSet<Point>, map: &Map) -> usize {
 fn combine_sets(sets: &Vec<HashSet<Point>>) -> Vec<HashSet<Point>> {
     let mut regions_coalesced = Vec::new();
     for (i, region0) in sets.iter().enumerate() {
-        for j in (i+1)..sets.len() {
+        for j in (i + 1)..sets.len() {
             let region1 = &sets[j];
             if region0.intersection(region1).count() > 0 {
                 let combined: HashSet<Point> = region0.union(region1).cloned().collect();
@@ -182,8 +215,12 @@ fn area(region: &HashSet<Point>) -> usize {
 }
 
 fn perimeter(region: &HashSet<Point>) -> usize {
-    4 * region.len() - (2 * region.iter().combinations(2)
-        .filter(|x| x[0].adjacent(x[1])).count())
+    4 * region.len()
+        - (2 * region
+            .iter()
+            .combinations(2)
+            .filter(|x| x[0].adjacent(x[1]))
+            .count())
 }
 
 struct Map {
@@ -207,7 +244,7 @@ impl Map {
             input.push(line.chars().collect_vec());
         }
 
-        Ok(Self{map: input})
+        Ok(Self { map: input })
     }
 
     fn in_bounds(&self, point: &Point) -> bool {
@@ -218,31 +255,79 @@ impl Map {
     }
 
     fn get_neighbors(&self, start: &Point) -> Vec<Point> {
-        vec![Point{x: start.x + 1, y: start.y},
-             Point{x: start.x - 1, y: start.y},
-             Point{x: start.x, y: start.y - 1},
-             Point{x: start.x, y: start.y + 1},
-             Point{x: start.x + 1, y: start.y + 1}]
-            .into_iter().filter(|p| self.in_bounds(p))
-            .collect()
+        vec![
+            Point {
+                x: start.x + 1,
+                y: start.y,
+            },
+            Point {
+                x: start.x - 1,
+                y: start.y,
+            },
+            Point {
+                x: start.x,
+                y: start.y - 1,
+            },
+            Point {
+                x: start.x,
+                y: start.y + 1,
+            },
+            Point {
+                x: start.x + 1,
+                y: start.y + 1,
+            },
+        ]
+        .into_iter()
+        .filter(|p| self.in_bounds(p))
+        .collect()
     }
 
     fn get_neighbors_nodiag(&self, start: &Point) -> Vec<Point> {
-        vec![Point{x: start.x + 1, y: start.y},
-             Point{x: start.x - 1, y: start.y},
-             Point{x: start.x, y: start.y - 1},
-             Point{x: start.x, y: start.y + 1}]
-            .into_iter().filter(|p| self.in_bounds(p))
-            .collect()
+        vec![
+            Point {
+                x: start.x + 1,
+                y: start.y,
+            },
+            Point {
+                x: start.x - 1,
+                y: start.y,
+            },
+            Point {
+                x: start.x,
+                y: start.y - 1,
+            },
+            Point {
+                x: start.x,
+                y: start.y + 1,
+            },
+        ]
+        .into_iter()
+        .filter(|p| self.in_bounds(p))
+        .collect()
     }
 
     fn get_neighbors_diag(&self, start: &Point) -> Vec<Point> {
-        vec![Point{x: start.x + 1, y: start.y + 1},
-             Point{x: start.x + 1, y: start.y - 1},
-             Point{x: start.x - 1, y: start.y + 1},
-             Point{x: start.x - 1, y: start.y - 1}]
-            .into_iter().filter(|p| self.in_bounds(p))
-            .collect()
+        vec![
+            Point {
+                x: start.x + 1,
+                y: start.y + 1,
+            },
+            Point {
+                x: start.x + 1,
+                y: start.y - 1,
+            },
+            Point {
+                x: start.x - 1,
+                y: start.y + 1,
+            },
+            Point {
+                x: start.x - 1,
+                y: start.y - 1,
+            },
+        ]
+        .into_iter()
+        .filter(|p| self.in_bounds(p))
+        .collect()
     }
 
     fn size(&self) -> usize {
@@ -256,7 +341,6 @@ impl Map {
         self.map[point.y as usize][point.x as usize]
     }
 }
-
 
 #[derive(Debug, Eq, PartialEq, Copy, Clone, Hash)]
 struct Point {

@@ -1,10 +1,10 @@
+use itertools::Itertools;
 use std::cmp::{max, Ordering};
 use std::collections::{HashMap, HashSet, VecDeque};
 use std::fs::File;
 use std::hash::{Hash, Hasher};
 use std::io::{BufRead, BufReader};
 use std::time::Instant;
-use itertools::Itertools;
 
 fn main() -> std::io::Result<()> {
     let mut maze = Maze::from_file("input/day20.txt")?;
@@ -16,9 +16,20 @@ fn main() -> std::io::Result<()> {
     let start_part2 = Instant::now();
     let part2 = maze.cheats_faster_than(20, 100);
     let end = Instant::now();
-    println!("Pathfinding took: {:?}", start_part1.duration_since(start_pathfinding));
-    println!("Part1: {}, duration: {:?}", part1, start_part2.duration_since(start_part1));
-    println!("Part2: {}, duration: {:?}", part2, end.duration_since(start_part2)); // 38457 too low
+    println!(
+        "Pathfinding took: {:?}",
+        start_part1.duration_since(start_pathfinding)
+    );
+    println!(
+        "Part1: {}, duration: {:?}",
+        part1,
+        start_part2.duration_since(start_part1)
+    );
+    println!(
+        "Part2: {}, duration: {:?}",
+        part2,
+        end.duration_since(start_part2)
+    ); // 38457 too low
 
     // I could cache the results for part1 and use it for part2 and do it all in one pass
 
@@ -58,8 +69,7 @@ impl Eq for Next {}
 
 impl PartialEq<Self> for Next {
     fn eq(&self, other: &Self) -> bool {
-        self.cost == other.cost
-            && self.loc == other.loc
+        self.cost == other.cost && self.loc == other.loc
     }
 }
 
@@ -80,7 +90,7 @@ struct Maze {
     width: usize,
     height: usize,
     walls: HashSet<Position>,
-    visited: HashMap<Position, usize>,  // store minimum cost to get there with visited tiles
+    visited: HashMap<Position, usize>, // store minimum cost to get there with visited tiles
     start: Position,
     end: Position,
 }
@@ -106,12 +116,15 @@ impl Maze {
             }
             width = line.len();
             for (x, c) in line.chars().enumerate() {
-                let p = Position { x: x as i32, y: y as i32 };
+                let p = Position {
+                    x: x as i32,
+                    y: y as i32,
+                };
                 match c {
                     '#' => _ = walls.insert(p),
                     'E' => end = p,
                     'S' => start = p,
-                    _   => {}
+                    _ => {}
                 }
             }
             height = max(height, y + 1);
@@ -154,7 +167,13 @@ impl Maze {
             return None;
         }
 
-        Some(self.visited.get(end).unwrap().abs_diff(*self.visited.get(start).unwrap()) - distance)
+        Some(
+            self.visited
+                .get(end)
+                .unwrap()
+                .abs_diff(*self.visited.get(start).unwrap())
+                - distance,
+        )
     }
 
     fn manhattan_distance(&self, start: &Position, end: &Position) -> usize {
@@ -196,28 +215,38 @@ impl Maze {
                     cheated: current.cheated,
                 });
             }
-
         }
 
         shortest_nocheat
-
     }
 
     fn next_options(&self, pos: &Position) -> Vec<Position> {
-        [Position { x: pos.x + 1, y: pos.y },
-            Position { x: pos.x - 1, y: pos.y },
-            Position { x: pos.x, y: pos.y - 1 },
-            Position { x: pos.x, y: pos.y + 1 }]
-            .into_iter().filter(|p| !self.is_wall(p))
-            // .filter(|p| !self.visited.contains(p))  // Need to revisit to find all paths
-            .collect::<Vec<Position>>()
+        [
+            Position {
+                x: pos.x + 1,
+                y: pos.y,
+            },
+            Position {
+                x: pos.x - 1,
+                y: pos.y,
+            },
+            Position {
+                x: pos.x,
+                y: pos.y - 1,
+            },
+            Position {
+                x: pos.x,
+                y: pos.y + 1,
+            },
+        ]
+        .into_iter()
+        .filter(|p| !self.is_wall(p))
+        // .filter(|p| !self.visited.contains(p))  // Need to revisit to find all paths
+        .collect::<Vec<Position>>()
     }
 
     fn is_valid(&self, p: &Position) -> bool {
-        p.x >= 0
-            && p.y >= 0
-            && p.x < self.width as i32
-            && p.y < self.height as i32
+        p.x >= 0 && p.y >= 0 && p.x < self.width as i32 && p.y < self.height as i32
     }
 
     fn is_wall(&self, p: &Position) -> bool {
@@ -228,7 +257,10 @@ impl Maze {
     fn display(&self) {
         for y in 0..self.height {
             for x in 0..self.width {
-                let p = Position { x: x as i32, y: y as i32 };
+                let p = Position {
+                    x: x as i32,
+                    y: y as i32,
+                };
                 if self.is_wall(&p) {
                     print!("#");
                     continue;

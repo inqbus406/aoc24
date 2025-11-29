@@ -14,8 +14,16 @@ fn main() -> std::io::Result<()> {
     let part2_result = part2(&input);
     let end = std::time::Instant::now();
 
-    println!("Part1: {}, duration: {:?}", part1_result, part2_start.duration_since(part1_start));
-    println!("Part2: {}, duration: {:?}", part2_result, end.duration_since(part2_start));
+    println!(
+        "Part1: {}, duration: {:?}",
+        part1_result,
+        part2_start.duration_since(part1_start)
+    );
+    println!(
+        "Part2: {}, duration: {:?}",
+        part2_result,
+        end.duration_since(part2_start)
+    );
 
     Ok(())
 }
@@ -25,7 +33,7 @@ fn part1(input: &str) -> usize {
     let mut stack = LinkedList::new();
     let mut to_fill = LinkedList::new();
     let mut index = 0usize;
-    let mut file_num= 0usize;
+    let mut file_num = 0usize;
 
     for (i, c) in input.chars().enumerate() {
         for _ in 0..c.to_digit(10).unwrap() {
@@ -72,10 +80,9 @@ impl Block {
     }
 }
 
-
 fn part2(input: &str) -> usize {
     let mut stack = LinkedList::new();
-    let mut free_list = LinkedList::new();  // this is faster as a Vec!
+    let mut free_list = LinkedList::new(); // this is faster as a Vec!
 
     let mut index = 0usize;
     let mut max_index = 0usize;
@@ -84,10 +91,18 @@ fn part2(input: &str) -> usize {
     for (i, c) in input.chars().enumerate() {
         let len = c.to_digit(10).unwrap() as usize;
         if i % 2 == 0 {
-            stack.push_front(Block{id: file_id, start: index, len});
+            stack.push_front(Block {
+                id: file_id,
+                start: index,
+                len,
+            });
             file_id += 1;
         } else {
-            free_list.push_back(Block{id: 0, start: index, len});
+            free_list.push_back(Block {
+                id: 0,
+                start: index,
+                len,
+            });
         }
         index += len;
         max_index = max(index, max_index);
@@ -100,7 +115,11 @@ fn part2(input: &str) -> usize {
         for free_block in free_list.iter_mut() {
             // Make sure not to move any blocks to the right!
             if free_block.start < block.start && free_block.len >= block.len {
-                blocks.push_back(Block{id: block.id, start: free_block.start, len: block.len});
+                blocks.push_back(Block {
+                    id: block.id,
+                    start: free_block.start,
+                    len: block.len,
+                });
                 free_block.len -= block.len;
                 free_block.start += block.len;
                 moved = true;
@@ -127,11 +146,10 @@ fn checksum(v: &[Option<usize>]) -> usize {
     for (i, n) in v.iter().enumerate() {
         match n {
             Some(v) => checksum += i * v,
-            None => {},
+            None => {}
         }
     }
     checksum
-
 }
 
 fn is_compact(v: &Vec<Option<usize>>) -> bool {

@@ -7,14 +7,28 @@ fn main() -> std::io::Result<()> {
     let equations = parse_equations("input/day07.txt")?;
 
     let part1_start = std::time::Instant::now();
-    let part1 = equations.iter().filter(|&e| is_valid(e, false))
-        .map(|e| e.0).sum::<u64>();
+    let part1 = equations
+        .iter()
+        .filter(|&e| is_valid(e, false))
+        .map(|e| e.0)
+        .sum::<u64>();
     let part2_start = std::time::Instant::now();
-    let part2 = equations.iter().filter(|&e| is_valid(e, true))
-        .map(|e| e.0).sum::<u64>();
+    let part2 = equations
+        .iter()
+        .filter(|&e| is_valid(e, true))
+        .map(|e| e.0)
+        .sum::<u64>();
     let end = std::time::Instant::now();
-    println!("Part1 = {}, duration: {:?}", part1, part2_start.duration_since(part1_start));
-    println!("Part2 = {}, duration: {:?}", part2, end.duration_since(part2_start));
+    println!(
+        "Part1 = {}, duration: {:?}",
+        part1,
+        part2_start.duration_since(part1_start)
+    );
+    println!(
+        "Part2 = {}, duration: {:?}",
+        part2,
+        end.duration_since(part2_start)
+    );
     println!("Total: {:?}", end.duration_since(part1_start));
 
     Ok(())
@@ -37,7 +51,10 @@ fn parse_equations(path: &str) -> std::io::Result<Vec<Equation>> {
         let line = line.trim();
         let parts = line.split_whitespace().collect::<Vec<_>>();
         let test_val = parts[0][0..parts[0].len() - 1].parse::<u64>().unwrap();
-        let numbers = parts[1..].iter().map(|s| s.parse::<u64>().unwrap()).collect::<Vec<_>>();
+        let numbers = parts[1..]
+            .iter()
+            .map(|s| s.parse::<u64>().unwrap())
+            .collect::<Vec<_>>();
         equations.push(Equation(test_val, numbers));
     }
 
@@ -51,7 +68,7 @@ fn is_valid(equation: &Equation, part2: bool) -> bool {
             equation.0 == num1 + num2
                 || equation.0 == num1 * num2
                 || (part2 && equation.0 == concat(*num1, *num2))
-        },
+        }
         [num1, num2, rest @ ..] => {
             let mut vec1 = vec![num1 + num2];
             let mut vec2 = vec![num1 * num2];
@@ -63,7 +80,7 @@ fn is_valid(equation: &Equation, part2: bool) -> bool {
             is_valid(&Equation(equation.0, vec1), part2)
                 || is_valid(&Equation(equation.0, vec2), part2)
                 || (part2 && is_valid(&Equation(equation.0, vec3), part2))
-        },
+        }
         _ => false,
     }
 }
@@ -85,8 +102,11 @@ mod tests {
     #[test]
     fn test_part1() -> std::io::Result<()> {
         let equations = parse_equations("../test_input/day07test.txt")?;
-        let part1 = equations.iter().filter(|&e| is_valid(e, false))
-            .map(|e| e.0).sum::<u64>();
+        let part1 = equations
+            .iter()
+            .filter(|&e| is_valid(e, false))
+            .map(|e| e.0)
+            .sum::<u64>();
         assert_eq!(part1, 3749);
 
         Ok(())
@@ -95,8 +115,11 @@ mod tests {
     #[test]
     fn test_part2() -> std::io::Result<()> {
         let equations = parse_equations("../test_input/day07test.txt")?;
-        let part2 = equations.iter().filter(|&e| is_valid(e, true))
-            .map(|e| e.0).sum::<u64>();
+        let part2 = equations
+            .iter()
+            .filter(|&e| is_valid(e, true))
+            .map(|e| e.0)
+            .sum::<u64>();
         assert_eq!(part2, 11387);
 
         Ok(())

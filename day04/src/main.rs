@@ -71,13 +71,13 @@ fn check_for_x(x: usize, y: usize, xword: &Vec<Vec<char>>) -> bool {
         return false;
     }
     match (xword[y - 1][x - 1], xword[y + 1][x + 1]) {
-        ('M', 'S') => {},
-        ('S', 'M') => {},
+        ('M', 'S') => {}
+        ('S', 'M') => {}
         _ => return false,
     }
     match (xword[y + 1][x - 1], xword[y - 1][x + 1]) {
-        ('M', 'S') => {},
-        ('S', 'M') => {},
+        ('M', 'S') => {}
+        ('S', 'M') => {}
         _ => return false,
     }
 

@@ -1,6 +1,6 @@
+use regex::Regex;
 use std::fs::File;
 use std::io::{BufRead, BufReader};
-use regex::Regex;
 
 fn main() -> std::io::Result<()> {
     let f = File::open("input/day03.txt")?;
@@ -35,7 +35,6 @@ fn main() -> std::io::Result<()> {
                 }
             }
         }
-
     }
     println!("Part 1: {}", part1_sum);
     println!("Part 2: {}", part2_sum);

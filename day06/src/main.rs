@@ -9,7 +9,7 @@ fn main() -> std::io::Result<()> {
     let mut map = Map::from_file("input/day06.txt")?;
     let initial_guard_pos = map.guard_pos;
 
-    while map.move_guard() {};
+    while map.move_guard() {}
 
     println!("Part1: {}", part1(&mut map));
     println!("Part2: {}", part2(&map, initial_guard_pos));
@@ -37,7 +37,6 @@ fn part2(map: &Map, start_pos: Position) -> usize {
 
     works.len()
 }
-
 
 #[derive(Debug)]
 enum Direction {
@@ -69,7 +68,12 @@ struct Map {
 }
 
 impl Map {
-    fn new(x_size: usize, y_size: usize, guard_pos: Position, obstacles: &HashSet<Position>) -> Self {
+    fn new(
+        x_size: usize,
+        y_size: usize,
+        guard_pos: Position,
+        obstacles: &HashSet<Position>,
+    ) -> Self {
         let mut visited = HashSet::new();
         visited.insert(guard_pos);
 
@@ -111,7 +115,12 @@ impl Map {
             y_size = max(y_size, y);
         }
 
-        Ok(Self::new(x_size + 1, y_size + 1, guard_position, &obstacles))
+        Ok(Self::new(
+            x_size + 1,
+            y_size + 1,
+            guard_position,
+            &obstacles,
+        ))
     }
 
     fn move_guard(&mut self) -> bool {
@@ -121,8 +130,15 @@ impl Map {
             Direction::South => (0, 1),
             Direction::West => (-1, 0),
         };
-        let next_pos = (self.guard_pos.0 + pos_update.0, self.guard_pos.1 + pos_update.1);
-        if next_pos.0 < 0 || next_pos.0 >= self.x_size as i32 || next_pos.1 < 0 || next_pos.1 >= self.y_size as i32 {
+        let next_pos = (
+            self.guard_pos.0 + pos_update.0,
+            self.guard_pos.1 + pos_update.1,
+        );
+        if next_pos.0 < 0
+            || next_pos.0 >= self.x_size as i32
+            || next_pos.1 < 0
+            || next_pos.1 >= self.y_size as i32
+        {
             return false;
         }
         if self.obstacles.contains(&next_pos) {

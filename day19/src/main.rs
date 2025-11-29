@@ -10,28 +10,37 @@ fn main() -> std::io::Result<()> {
     let (towels, patterns) = get_towels_and_patterns(reader);
 
     let start = Instant::now();
-    let part1 = patterns.iter()
-        .filter(|p| is_possible(p, &towels))
-        .count();
+    let part1 = patterns.iter().filter(|p| is_possible(p, &towels)).count();
     let part1_end = Instant::now();
-    println!("Part1: {}, duration: {:?}", part1, part1_end.duration_since(start));
+    println!(
+        "Part1: {}, duration: {:?}",
+        part1,
+        part1_end.duration_since(start)
+    );
 
     let part2_start = Instant::now();
     let mut cached_searcher = Searcher::new();
 
-    let part2 = patterns.iter()
+    let part2 = patterns
+        .iter()
         .map(|p| cached_searcher.possibilities(p, &towels))
         .sum::<usize>();
     let part2_end = Instant::now();
-    println!("Part2: {}, duration: {:?}", part2, part2_end.duration_since(part2_start));
-
+    println!(
+        "Part2: {}, duration: {:?}",
+        part2,
+        part2_end.duration_since(part2_start)
+    );
 
     Ok(())
 }
 
 fn get_towels_and_patterns(reader: BufReader<File>) -> (Vec<String>, Vec<String>) {
     let mut lines = reader.lines();
-    let towels = lines.next().unwrap().unwrap()
+    let towels = lines
+        .next()
+        .unwrap()
+        .unwrap()
         .split(", ")
         .map(|s| String::from(s))
         .collect::<Vec<_>>();
@@ -63,7 +72,7 @@ fn is_possible(pattern: &str, towels: &Vec<String>) -> bool {
                 if is_possible(substring, &towels) {
                     return true;
                 }
-            },
+            }
             _ => continue,
         }
     }
@@ -86,7 +95,8 @@ impl<'a> Searcher<'a> {
         if self.cache.contains_key(pattern) {
             return self.cache[pattern];
         }
-        let matching_towels = towels.iter()
+        let matching_towels = towels
+            .iter()
             .filter(|s| s.len() == pattern.len())
             .filter(|s| s == &pattern)
             .collect::<HashSet<_>>();
@@ -99,7 +109,7 @@ impl<'a> Searcher<'a> {
                 Some(0) => {
                     let substring = &pattern[towel.chars().count()..];
                     count += self.possibilities(substring, towels);
-                },
+                }
                 _ => continue,
             }
         }
@@ -120,10 +130,8 @@ mod tests {
         let reader = BufReader::new(f);
         let (towels, patterns) = get_towels_and_patterns(reader);
 
-        let part1 = patterns.iter()
-            .filter(|p| is_possible(p, &towels))
-            .count();
-       assert_eq!(part1, 6);
+        let part1 = patterns.iter().filter(|p| is_possible(p, &towels)).count();
+        assert_eq!(part1, 6);
 
         Ok(())
     }
@@ -136,7 +144,8 @@ mod tests {
 
         let mut cached_searcher = Searcher::new();
 
-        let part2 = patterns.iter()
+        let part2 = patterns
+            .iter()
             .map(|p| cached_searcher.possibilities(p, &towels))
             .sum::<usize>();
         assert_eq!(part2, 16);

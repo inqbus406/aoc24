@@ -27,7 +27,10 @@ fn parse_lists_from_file(fname: &str) -> std::io::Result<(Vec<i32>, Vec<i32>)> {
         if line.is_empty() {
             continue;
         }
-        let nums = line.split_whitespace().map(|num| num.parse::<i32>().unwrap()).collect::<Vec<i32>>();
+        let nums = line
+            .split_whitespace()
+            .map(|num| num.parse::<i32>().unwrap())
+            .collect::<Vec<i32>>();
         left_list.push(nums[0]);
         right_list.push(nums[1]);
     }
@@ -36,7 +39,10 @@ fn parse_lists_from_file(fname: &str) -> std::io::Result<(Vec<i32>, Vec<i32>)> {
 }
 
 fn part1(left_list: &[i32], right_list: &[i32]) -> i32 {
-    left_list.iter().zip(right_list).fold(0, |acc, (&left, &right)| acc + (left - right).abs())
+    left_list
+        .iter()
+        .zip(right_list)
+        .fold(0, |acc, (&left, &right)| acc + (left - right).abs())
 }
 
 fn part2(left_list: &[i32], right_list: &[i32]) -> usize {

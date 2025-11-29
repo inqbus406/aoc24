@@ -78,12 +78,15 @@ impl Map {
         for (y, line) in input.lines().enumerate() {
             // println!("Line {}: {}", y, line);
             for (x, c) in line.chars().enumerate() {
-                let p = Position { x: x as i32, y: y as i32 };
+                let p = Position {
+                    x: x as i32,
+                    y: y as i32,
+                };
                 match c {
                     '@' => robot = p,
                     'O' => _ = boxes.insert(p),
                     '#' => _ = walls.insert(p),
-                    _ => {},
+                    _ => {}
                 }
 
                 x_size = max(x + 1, x_size);
@@ -117,7 +120,11 @@ impl Map {
         }
 
         self.walls.contains(pos)
-            || (self.doublewide && self.walls.contains(&Position {x: pos.x - 1, y: pos.y }))
+            || (self.doublewide
+                && self.walls.contains(&Position {
+                    x: pos.x - 1,
+                    y: pos.y,
+                }))
             || pos.x == 0
             || pos.y == 0
             || pos.x == self.x_size as i32 - 1
@@ -125,7 +132,12 @@ impl Map {
     }
 
     fn is_box(&self, pos: &Position) -> bool {
-        self.boxes.contains(pos) || (self.doublewide && self.boxes.contains(&Position { x: pos.x - 1, y: pos.y }))
+        self.boxes.contains(pos)
+            || (self.doublewide
+                && self.boxes.contains(&Position {
+                    x: pos.x - 1,
+                    y: pos.y,
+                }))
     }
 
     fn move_robot(&mut self, dir: char) {
@@ -155,15 +167,16 @@ impl Map {
             orig_b
         };
         let next_pos = Self::new_pos(&b, dir);
-        let next_pos_right = Position { x: next_pos.x + 1, y: next_pos.y};
-        if !self.is_valid(&next_pos)
-            || (self.doublewide && !self.is_valid(&next_pos_right)) {
-            panic!();  // Should never happen with there being walls
+        let next_pos_right = Position {
+            x: next_pos.x + 1,
+            y: next_pos.y,
+        };
+        if !self.is_valid(&next_pos) || (self.doublewide && !self.is_valid(&next_pos_right)) {
+            panic!(); // Should never happen with there being walls
         }
 
         // Check if it's a wall
-        if self.is_wall(&next_pos)
-            || (self.doublewide && self.is_wall(&next_pos_right)) {
+        if self.is_wall(&next_pos) || (self.doublewide && self.is_wall(&next_pos_right)) {
             // println!("Can't move, {:?} is a wall", &next_pos);
             return false;
         }
@@ -173,7 +186,7 @@ impl Map {
 
         // Check if there's a box there and try to move it if so
         let right_side = if self.doublewide {
-            Position {x: b.x + 1, y: b.y}
+            Position { x: b.x + 1, y: b.y }
         } else {
             b.clone()
         };
@@ -181,7 +194,11 @@ impl Map {
             return false;
         }
 
-        if self.doublewide && self.is_box(&next_pos_right) && next_pos_right != orig_b && !self.can_move_box(&next_pos_right, dir) {
+        if self.doublewide
+            && self.is_box(&next_pos_right)
+            && next_pos_right != orig_b
+            && !self.can_move_box(&next_pos_right, dir)
+        {
             return false;
         }
 
@@ -196,31 +213,38 @@ impl Map {
             orig_b
         };
         let next_pos = Self::new_pos(&b, dir);
-        let next_pos_right = Position { x: next_pos.x + 1, y: next_pos.y};
-        if !self.is_valid(&next_pos)
-            || (self.doublewide && !self.is_valid(&next_pos_right)) {
-            panic!();  // Should never happen with there being walls
+        let next_pos_right = Position {
+            x: next_pos.x + 1,
+            y: next_pos.y,
+        };
+        if !self.is_valid(&next_pos) || (self.doublewide && !self.is_valid(&next_pos_right)) {
+            panic!(); // Should never happen with there being walls
         }
 
         // Check if it's a wall
-        if self.is_wall(&next_pos)
-            || (self.doublewide && self.is_wall(&next_pos_right)) {
+        if self.is_wall(&next_pos) || (self.doublewide && self.is_wall(&next_pos_right)) {
             return false;
         }
 
         // only move if they can BOTH move!!
         let right_side = if self.doublewide {
-            Position {x: b.x + 1, y: b.y}
+            Position { x: b.x + 1, y: b.y }
         } else {
             b.clone()
         };
-        if (self.is_box(&b) && !self.can_move_box(&b, dir)) || (self.doublewide && self.is_box(&right_side) && !self.can_move_box(&b, dir)) {
+        if (self.is_box(&b) && !self.can_move_box(&b, dir))
+            || (self.doublewide && self.is_box(&right_side) && !self.can_move_box(&b, dir))
+        {
             return false;
         }
 
         // Check if there's a box there and try to move it if so
         if (next_pos != right_side && self.is_box(&next_pos) && !self.move_box(&next_pos, dir))
-            || (self.doublewide && self.boxes.contains(&next_pos_right) && next_pos_right != orig_b && !self.move_box(&next_pos_right, dir)) {
+            || (self.doublewide
+                && self.boxes.contains(&next_pos_right)
+                && next_pos_right != orig_b
+                && !self.move_box(&next_pos_right, dir))
+        {
             return false;
         }
 
@@ -232,25 +256,36 @@ impl Map {
 
     fn new_pos(p: &Position, dir: char) -> Position {
         match dir {
-            '^' => Position { x: p.x, y: p.y - 1},
-            '>' => Position { x: p.x + 1, y: p.y},
-            'v' => Position { x: p.x, y: p.y + 1},
-            '<' => Position { x: p.x - 1, y: p.y},
-            _   => {
+            '^' => Position { x: p.x, y: p.y - 1 },
+            '>' => Position { x: p.x + 1, y: p.y },
+            'v' => Position { x: p.x, y: p.y + 1 },
+            '<' => Position { x: p.x - 1, y: p.y },
+            _ => {
                 println!("{dir} is not a valid direction!");
                 panic!();
-            },
+            }
         }
     }
 
     fn part2ify(&mut self) {
         self.x_size = self.x_size * 2;
-        self.robot = Position { x: self.robot.x * 2, y: self.robot.y };
+        self.robot = Position {
+            x: self.robot.x * 2,
+            y: self.robot.y,
+        };
         self.doublewide = true;
 
         // Move boxes and walls over to correct spot
-        self.boxes = self.boxes.iter().map(|p| Position {x: p.x * 2, y: p.y}).collect();
-        self.walls = self.walls.iter().map(|p| Position {x: p.x * 2, y: p.y}).collect();
+        self.boxes = self
+            .boxes
+            .iter()
+            .map(|p| Position { x: p.x * 2, y: p.y })
+            .collect();
+        self.walls = self
+            .walls
+            .iter()
+            .map(|p| Position { x: p.x * 2, y: p.y })
+            .collect();
     }
 
     fn gps_sum(&self) -> i32 {
@@ -261,7 +296,10 @@ impl Map {
     fn display(&self) {
         for y in 0..self.y_size {
             for x in 0..self.x_size {
-                let p = Position { x: x as i32, y: y as i32 };
+                let p = Position {
+                    x: x as i32,
+                    y: y as i32,
+                };
                 if self.robot == p {
                     print!("@");
                     continue;
@@ -306,7 +344,6 @@ fn run(path: impl AsRef<Path>, part2: bool) -> std::io::Result<i32> {
     while let Some(Ok(n)) = lines.next() {
         moves += &n;
     }
-
 
     for dir in moves.chars() {
         if dir.is_whitespace() {

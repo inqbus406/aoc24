@@ -48,7 +48,11 @@ fn main() -> std::io::Result<()> {
         machine.reg_c = orig_reg_c;
         let outputs = machine.run();
 
-        if outputs.iter().zip(program.iter()).all(|(&num1, &num2)| num1 == num2 as usize) {
+        if outputs
+            .iter()
+            .zip(program.iter())
+            .all(|(&num1, &num2)| num1 == num2 as usize)
+        {
             break;
         }
 
@@ -112,19 +116,27 @@ impl Machine {
                     "A:" => reg_a = tokens.last().unwrap().parse::<usize>().unwrap(),
                     "B:" => reg_b = tokens.last().unwrap().parse::<usize>().unwrap(),
                     "C:" => reg_c = tokens.last().unwrap().parse::<usize>().unwrap(),
-                    _   => unreachable!(),
-                }
+                    _ => unreachable!(),
+                },
                 "Program:" => {
-                    program = tokens[1].split(',').map(|s| s.parse::<u8>().unwrap()).collect();
+                    program = tokens[1]
+                        .split(',')
+                        .map(|s| s.parse::<u8>().unwrap())
+                        .collect();
                 }
                 _ => unreachable!(),
             }
         }
 
-        Ok(Self { reg_a, reg_b, reg_c, program })
+        Ok(Self {
+            reg_a,
+            reg_b,
+            reg_c,
+            program,
+        })
     }
 
-    fn run(&mut self) -> Vec::<usize> {
+    fn run(&mut self) -> Vec<usize> {
         let mut outputs = Vec::new();
         let mut instruction_pointer = 0;
 
@@ -138,32 +150,32 @@ impl Machine {
             match instruction {
                 Instruction::Adv => {
                     self.reg_a = self.reg_a >> combo_operand;
-                },
+                }
                 Instruction::Bxl => {
                     self.reg_b = self.reg_b ^ literal_operand as usize;
-                },
+                }
                 Instruction::Bst => {
                     self.reg_b = (combo_operand % 8) as usize;
-                },
+                }
                 Instruction::Jnz => {
                     if self.reg_a != 0 {
                         instruction_pointer = literal_operand as usize;
                         continue;
                     }
-                },
+                }
                 Instruction::Bxc => {
                     self.reg_b = self.reg_b ^ self.reg_c;
-                },
+                }
                 Instruction::Out => {
                     let result = combo_operand % 8;
                     outputs.push(result);
-                },
+                }
                 Instruction::Bdv => {
                     self.reg_b = self.reg_a >> combo_operand;
-                },
+                }
                 Instruction::Cdv => {
                     self.reg_c = self.reg_a >> combo_operand;
-                },
+                }
             }
 
             instruction_pointer += 2;

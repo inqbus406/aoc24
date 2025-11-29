@@ -6,8 +6,10 @@ fn main() -> std::io::Result<()> {
     let mut map2 = Map::from_file(101, 103, "input/day14.txt")?;
 
     map1.run_n_seconds(100);
-    let part1: usize = [0usize, 1usize, 2usize, 3usize].iter()
-        .map(|&quadrant| map1.robots_in_quadrant(quadrant)).product();
+    let part1: usize = [0usize, 1usize, 2usize, 3usize]
+        .iter()
+        .map(|&quadrant| map1.robots_in_quadrant(quadrant))
+        .product();
 
     println!("part1: {}", part1);
 
@@ -46,7 +48,11 @@ struct Map {
 }
 
 impl Map {
-    fn from_file(x_size: usize, y_size: usize, path: impl AsRef<std::path::Path>) -> std::io::Result<Self> {
+    fn from_file(
+        x_size: usize,
+        y_size: usize,
+        path: impl AsRef<std::path::Path>,
+    ) -> std::io::Result<Self> {
         let f = File::open(path)?;
         let reader = BufReader::new(f);
         let lines = reader.lines();
@@ -61,7 +67,8 @@ impl Map {
                 continue;
             }
 
-            let nums = line.split(['p', '=', ',', ' ', 'v'])
+            let nums = line
+                .split(['p', '=', ',', ' ', 'v'])
                 .filter(|s| !s.is_empty())
                 .map(|s| s.parse::<i32>().unwrap())
                 .collect::<Vec<i32>>();
@@ -71,7 +78,12 @@ impl Map {
             let x_velocity = nums[2] as i32;
             let y_velocity = nums[3] as i32;
 
-            robots.push(Robot{x_pos, y_pos, x_velocity, y_velocity});
+            robots.push(Robot {
+                x_pos,
+                y_pos,
+                x_velocity,
+                y_velocity,
+            });
         }
 
         Ok(Self {
@@ -123,12 +135,15 @@ impl Map {
             _ => unreachable!(),
         };
 
-        self.robots.iter().filter(|r| {
-            r.x_pos as usize >= x_range.start
-                && r.x_pos as usize <= x_range.end
-                && r.y_pos as usize >= y_range.start
-                && r.y_pos as usize <= y_range.end
-        }).count()
+        self.robots
+            .iter()
+            .filter(|r| {
+                r.x_pos as usize >= x_range.start
+                    && r.x_pos as usize <= x_range.end
+                    && r.y_pos as usize >= y_range.start
+                    && r.y_pos as usize <= y_range.end
+            })
+            .count()
     }
 
     #[allow(dead_code)]
@@ -166,7 +181,8 @@ impl Map {
     }
 
     fn robots_at(&self, x: usize, y: usize) -> usize {
-        self.robots.iter()
+        self.robots
+            .iter()
             .filter(|&r| r.x_pos as usize == x && r.y_pos as usize == y)
             .count()
     }

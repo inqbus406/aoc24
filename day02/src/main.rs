@@ -4,8 +4,14 @@ use std::io::{BufRead, BufReader};
 fn main() -> std::io::Result<()> {
     let reports = parse_reports("input/day02.txt")?;
 
-    let part1 = reports.iter().filter(|&report| check_report(report)).count();
-    let part2 = reports.iter().filter(|&report| check_report_part2(report)).count();
+    let part1 = reports
+        .iter()
+        .filter(|&report| check_report(report))
+        .count();
+    let part2 = reports
+        .iter()
+        .filter(|&report| check_report_part2(report))
+        .count();
 
     println!("part1: {}", part1);
     println!("part2: {}", part2);
@@ -27,7 +33,10 @@ fn parse_reports(fname: &str) -> std::io::Result<Vec<Vec<i32>>> {
         if line.is_empty() {
             continue;
         }
-        let report = line.split_whitespace().map(|num| num.parse::<i32>().unwrap()).collect::<Vec<_>>();
+        let report = line
+            .split_whitespace()
+            .map(|num| num.parse::<i32>().unwrap())
+            .collect::<Vec<_>>();
         reports.push(report);
     }
 
@@ -73,7 +82,10 @@ mod tests {
     #[test]
     fn test_part1() -> std::io::Result<()> {
         let reports = parse_reports("../test_input/day02test.txt")?;
-        let part1 = reports.iter().filter(|&report| check_report(report)).count();
+        let part1 = reports
+            .iter()
+            .filter(|&report| check_report(report))
+            .count();
         assert_eq!(part1, 2);
 
         Ok(())
@@ -82,7 +94,10 @@ mod tests {
     #[test]
     fn test_part2() -> std::io::Result<()> {
         let reports = parse_reports("../test_input/day02test.txt")?;
-        let part2 = reports.iter().filter(|&report| check_report_part2(report)).count();
+        let part2 = reports
+            .iter()
+            .filter(|&report| check_report_part2(report))
+            .count();
         assert_eq!(part2, 4);
 
         Ok(())
