@@ -1,13 +1,22 @@
+use cached::proc_macro::cached;
 use std::collections::VecDeque;
 use std::fs::File;
 use std::io::{BufRead, BufReader};
+use std::path::PathBuf;
 
 fn main() -> std::io::Result<()> {
-    let f = File::open("test_input/day21test.txt")?;
+    let args = std::env::args().collect::<Vec<_>>();
+    let dir = if args.contains(&String::from("--test")) {
+        PathBuf::from("test_input")
+    } else {
+        PathBuf::from("input")
+    };
+    let f = File::open(dir.join("day21.txt"))?;
     let reader = BufReader::new(f);
     let lines = reader.lines();
 
     let mut part1_sum = 0;
+    let mut part2_sum = 0;
 
     for line in lines {
         let Ok(code) = line else {
@@ -17,27 +26,32 @@ fn main() -> std::io::Result<()> {
             continue;
         }
         let mut keypad_robot = NumericKeypadRobot::new();
-        let mut result = String::new();
-        for c in code.chars() {
-            result.push_str(&keypad_robot.enter_digit(&NumericKey::from_char(c)));
-            // result.push_str(&format!("   making {}: {}      ", c, keypad_robot.enter_digit(&NumericKey::from_char(c))));
-        }
+        let part1_length = code.chars()
+            .map(|c| keypad_robot.enter_digit(&NumericKey::from_char(c), 2))
+            .sum::<usize>();
+        keypad_robot.reset();
+
+        let part2_length = code.chars()
+            .map(|c| keypad_robot.enter_digit(&NumericKey::from_char(c), 25))
+            .sum::<usize>();
+
         let num = code
             .split('A')
             .take(1)
             .map(|s| s.parse::<usize>().unwrap())
             .collect::<Vec<_>>();
-        part1_sum += num[0] * result.len();
-        println!("{}: {}, len: {}", code, result, result.len());
-        println!("As: {}", result.chars().filter(|&c| c == 'A').count());
+        part1_sum += num[0] * part1_length;
+        part2_sum += num[0] * part2_length;
+        // println!("{}: len: {}", code, part1_length);
     }
 
     println!("Part1: {part1_sum}");
+    println!("Part2: {part2_sum}");
 
     Ok(())
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Hash, Eq, PartialEq)]
 enum NumericKey {
     A,
     Zero,
@@ -116,7 +130,7 @@ impl NumericKey {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy, Hash, Eq, PartialEq)]
 enum TClusterKey {
     A,
     Right,
@@ -136,6 +150,7 @@ impl TClusterKey {
         }
     }
 
+    #[allow(dead_code)]
     fn to_char(&self) -> char {
         match self {
             TClusterKey::A => 'A',
@@ -155,44 +170,36 @@ struct Next {
 
 struct NumericKeypadRobot {
     position: NumericKey,
-    // robot: TClusterKeypadRobot1,
 }
-
-// struct TClusterKeypadRobot1 {
-//     position: TClusterKey,
-//     robot: TClusterKeypadRobot2,
-// }
-//
-// struct TClusterKeypadRobot2 {
-//     position: TClusterKey,
-// }
 
 impl NumericKeypadRobot {
     fn new() -> Self {
         Self {
             position: NumericKey::A,
-            // robot: TClusterKeypadRobot1::new(),
         }
     }
 
-    fn enter_digit(&mut self, digit: &NumericKey) -> String {
-        // println!("Keypad robot wants {:?}", digit);
-        let mut result = String::new();
+    fn reset(&mut self) {
+        self.position = NumericKey::A;
+    }
+
+    fn enter_digit(&mut self, digit: &NumericKey, n_robots: usize) -> usize {
+        let mut min_length = usize::MAX;
+
         for path in self.moves_to_digit(digit) {
-            let mut temp = String::new();
+            let mut temp_length = 0;
+            let mut current_key = TClusterKey::A;
             for key in path {
-                // println!("Keypad robot asks for {:?}", key);
-                temp.push_str(&enter_direction(&TClusterKey::A, &key, 1));
+                temp_length += enter_direction_length(current_key, key, n_robots);
+                current_key = key;
             }
-            if result.is_empty() || temp.len() < result.len() {
-                result = temp;
+            if temp_length < min_length {
+                min_length = temp_length;
             }
         }
         self.position = digit.clone();
 
-        // println!("Moving from {:?} to {:?}: {:?}", self.position, digit, &result);
-
-        result
+        min_length
     }
 
     fn moves_to_digit(&self, digit: &NumericKey) -> Vec<Vec<TClusterKey>> {
@@ -225,8 +232,6 @@ impl NumericKeypadRobot {
                 });
             }
         }
-        // println!("Found valid paths from {:?} to {:?}", self.position, digit);
-        // dbg!(&result);
 
         result
     }
@@ -242,15 +247,11 @@ impl NumericKeypadRobot {
         .filter(|pos| start.next(&pos).is_some())
         .filter(|pos| start.next(&pos).unwrap().position() != (0, 3)) // Don't step in the gap
         .filter(|pos| {
-            let test = Self::manhattan_distance(&start.next(&pos).unwrap(), end)
-                < Self::manhattan_distance(start, end);
-            // println!("{:?} valid move from {:?} toward {:?}? {test}", &start.next(&pos).unwrap(), start, end);
-            test
+            Self::manhattan_distance(&start.next(&pos).unwrap(), end)
+                < Self::manhattan_distance(start, end)
         })
         .collect();
 
-        // println!("Going from {:?} to {:?}", start, end);
-        // dbg!(&result);
         result
     }
 
@@ -260,170 +261,89 @@ impl NumericKeypadRobot {
     }
 }
 
-fn enter_direction(start: &TClusterKey, end: &TClusterKey, n_robots: usize) -> String {
-    let mut result = String::new();
+#[cached]
+fn enter_direction_length(start: TClusterKey, end: TClusterKey, n_robots: usize) -> usize {
+    if n_robots == 1 {
+        return get_all_moves_to_key(start, end)[0].len();
+    }
 
-    if n_robots == 0 {
-        for key in moves_to_key(start, end) {
-            // println!("TClusterKeypadRobot2 asks for {:?}", key);
-            result.push(key.to_char());
+    let mut min_length = usize::MAX;
+
+    for path in get_all_moves_to_key(start, end) {
+        let mut total_length = 0;
+        let mut current_pos = TClusterKey::A;
+
+        for target_key in path {
+            total_length += enter_direction_length(current_pos, target_key, n_robots - 1);
+            current_pos = target_key;
         }
 
-        return result;
+        min_length = min_length.min(total_length);
     }
 
-    for key in moves_to_key(start, end) {
-        result.insert_str(0, &enter_direction(&key, &end, n_robots - 1));
-    }
-
-    result
+    min_length
 }
 
-fn moves_to_key(start: &TClusterKey, key: &TClusterKey) -> Vec<TClusterKey> {
-    let mut result = Vec::new();
-    let start = start.position();
-    let end = key.position();
+#[cached]
+fn get_all_moves_to_key(start: TClusterKey, end: TClusterKey) -> Vec<Vec<TClusterKey>> {
+    if start == end {
+        return vec![vec![TClusterKey::A]];
+    }
 
-    let moving_up = start.1 > end.1;
-    let moving_left = start.0 > end.0;
+    let start_pos = start.position();
+    let end_pos = end.position();
+    let dx = end_pos.0 as i32 - start_pos.0 as i32;
+    let dy = end_pos.1 as i32 - start_pos.1 as i32;
 
-    if !moving_up {
-        for _ in 0..start.1.abs_diff(end.1) {
-            result.push(TClusterKey::Down);
+    let mut horizontal = Vec::new();
+    let mut vertical = Vec::new();
+
+    for _ in 0..dx.abs() {
+        if dx > 0 {
+            horizontal.push(TClusterKey::Right);
+        } else {
+            horizontal.push(TClusterKey::Left);
         }
     }
 
-    if moving_left {
-        for _ in 0..start.0.abs_diff(end.0) {
-            result.push(TClusterKey::Left);
-        }
-    } else {
-        for _ in 0..start.0.abs_diff(end.0) {
-            result.push(TClusterKey::Right);
+    for _ in 0..dy.abs() {
+        if dy > 0 {
+            vertical.push(TClusterKey::Down);
+        } else {
+            vertical.push(TClusterKey::Up);
         }
     }
 
-    if moving_up {
-        for _ in 0..start.1.abs_diff(end.1) {
-            result.push(TClusterKey::Up);
-        }
+    let mut paths = Vec::new();
+
+    // Try horizontal first, then vertical (if valid)
+    if !(start_pos.1 == 0 && end_pos == (0, 1)) {
+        // Avoid gap
+        let mut path1 = horizontal.clone();
+        path1.extend(vertical.clone());
+        path1.push(TClusterKey::A);
+        paths.push(path1);
     }
 
-    result.push(TClusterKey::A);
-    result
+    // Try vertical first, then horizontal (if valid and different)
+    if !(start_pos == (0, 1) && end_pos.1 == 0) && !vertical.is_empty() && !horizontal.is_empty() {
+        let mut path2 = vertical.clone();
+        path2.extend(horizontal.clone());
+        path2.push(TClusterKey::A);
+        paths.push(path2);
+    }
+
+    // If only one direction needed or gap avoidance left us with one path
+    if paths.is_empty() {
+        let mut path = horizontal;
+        path.extend(vertical);
+        path.push(TClusterKey::A);
+        paths.push(path);
+    }
+
+    paths
 }
 
-// impl TClusterKeypadRobot1 {
-//     fn new() -> Self {
-//         Self {
-//             position: TClusterKey::A,
-//             robot: TClusterKeypadRobot2::new(),
-//         }
-//     }
-//
-//     fn enter_direction(&mut self, direction: &TClusterKey) -> String {
-//         // println!("TClusterKeypadRobot1 wants {:?}", direction);
-//         let mut result = String::new();
-//         for key in self.moves_to_key(direction) {
-//             // println!("TClusterKeypadRobot1 asks for {:?}", key);
-//             result.push_str(&self.robot.enter_direction(&key));
-//         }
-//
-//         self.position = direction.clone();
-//
-//         result
-//     }
-//
-//     fn moves_to_key(&self, key: &TClusterKey) -> Vec<TClusterKey> {
-//         // Always move right before up and down before left
-//         let mut result = Vec::new();
-//         let start = self.position.position();
-//         let end = key.position();
-//
-//         let moving_up = start.1 > end.1;
-//         let moving_left = start.0 > end.0;
-//
-//         if !moving_up {
-//             for _ in 0..start.1.abs_diff(end.1) {
-//                 result.push(TClusterKey::Down);
-//             }
-//         }
-//
-//         if moving_left {
-//             for _ in 0..start.0.abs_diff(end.0) {
-//                 result.push(TClusterKey::Left);
-//             }
-//         } else {
-//             for _ in 0..start.0.abs_diff(end.0) {
-//                 result.push(TClusterKey::Right);
-//             }
-//         }
-//
-//         if moving_up {
-//             for _ in 0..start.1.abs_diff(end.1) {
-//                 result.push(TClusterKey::Up);
-//             }
-//         }
-//
-//         result.push(TClusterKey::A);
-//         result
-//     }
-// }
-//
-// impl TClusterKeypadRobot2 {
-//     fn new() -> Self {
-//         Self {
-//             position: TClusterKey::A,
-//         }
-//     }
-//
-//     fn enter_direction(&mut self, direction: &TClusterKey) -> String {
-//         // println!("TClusterKeypadRobot2 wants {:?}", direction);
-//         let mut result = String::new();
-//         for key in self.moves_to_key(direction) {
-//             // println!("TClusterKeypadRobot2 asks for {:?}", key);
-//             result.push(key.to_char());
-//         }
-//         self.position = direction.clone();
-//
-//         result
-//     }
-//
-//     // This function will probably be wrapped in a Trait or something because it's shared
-//     fn moves_to_key(&self, key: &TClusterKey) -> Vec<TClusterKey> {
-//         let mut result = Vec::new();
-//         let start = self.position.position();
-//         let end = key.position();
-//
-//         let moving_up = start.1 > end.1;
-//         let moving_left = start.0 > end.0;
-//
-//         if !moving_up {
-//             for _ in 0..start.1.abs_diff(end.1) {
-//                 result.push(TClusterKey::Down);
-//             }
-//         }
-//
-//         if moving_left {
-//             for _ in 0..start.0.abs_diff(end.0) {
-//                 result.push(TClusterKey::Left);
-//             }
-//         } else {
-//             for _ in 0..start.0.abs_diff(end.0) {
-//                 result.push(TClusterKey::Right);
-//             }
-//         }
-//
-//         if moving_up {
-//             for _ in 0..start.1.abs_diff(end.1) {
-//                 result.push(TClusterKey::Up);
-//             }
-//         }
-//
-//         result.push(TClusterKey::A);
-//         result
-//     }
-// }
 
 #[cfg(test)]
 mod tests {
