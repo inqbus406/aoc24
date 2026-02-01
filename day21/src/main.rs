@@ -26,12 +26,14 @@ fn main() -> std::io::Result<()> {
             continue;
         }
         let mut keypad_robot = NumericKeypadRobot::new();
-        let part1_length = code.chars()
+        let part1_length = code
+            .chars()
             .map(|c| keypad_robot.enter_digit(&NumericKey::from_char(c), 2))
             .sum::<usize>();
         keypad_robot.reset();
 
-        let part2_length = code.chars()
+        let part2_length = code
+            .chars()
             .map(|c| keypad_robot.enter_digit(&NumericKey::from_char(c), 25))
             .sum::<usize>();
 
@@ -343,7 +345,6 @@ fn get_all_moves_to_key(start: TClusterKey, end: TClusterKey) -> Vec<Vec<TCluste
 
     paths
 }
-
 
 #[cfg(test)]
 mod tests {

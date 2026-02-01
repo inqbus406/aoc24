@@ -1,27 +1,29 @@
+use anyhow::bail;
 use std::collections::{HashMap, HashSet};
 use std::fs::File;
 use std::io::{BufRead, BufReader};
 use std::path::Path;
-use anyhow::bail;
 
 fn main() -> anyhow::Result<()> {
     let mut circuit = DigitalCircuit::from_file("input/day24.txt")?;
 
     circuit.evaluate_all();
 
-    let mut z_wires = circuit.wires.keys()
+    let mut z_wires = circuit
+        .wires
+        .keys()
         .filter(|s| s.starts_with('z'))
         .collect::<Vec<_>>();
     z_wires.sort();
-    let z_wires: Vec<bool> = z_wires.into_iter()
-        .map(|wire| {
-            match circuit.wires[wire] {
-                Value::Literal(value) => value,
-                _ => panic!("Unevaluated wire!"),
-            }
+    let z_wires: Vec<bool> = z_wires
+        .into_iter()
+        .map(|wire| match circuit.wires[wire] {
+            Value::Literal(value) => value,
+            _ => panic!("Unevaluated wire!"),
         })
         .collect();
-    let part1 = z_wires.iter()
+    let part1 = z_wires
+        .iter()
         .rev()
         .fold(0, |acc, &b| (acc << 1) | b as u64);
     println!("Part 1: {part1}");
